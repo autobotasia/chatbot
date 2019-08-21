@@ -7,16 +7,18 @@ from tensor2tensor.data_generators import problem
 from tensor2tensor.data_generators import text_problems
 from tensor2tensor.utils import registry
 
+import tensorflow as tf
+import os
 import unidecode
 
 
 @registry.register_problem
-class TranslateVivi(text_problems.Text2TextProblem):
+class Chatbot(text_problems.Text2TextProblem):
   """Problem spec for IWSLT'15 En-Vi translation."""
 
   @property
   def approx_vocab_size(self):
-    return 2**15  # 32768
+    return 2**18  # 32768
 
   @property
   def dataset_splits(self):
@@ -39,23 +41,15 @@ class TranslateVivi(text_problems.Text2TextProblem):
     del tmp_dir
     del dataset_split
 
-    #vn = 'aáàảãạăắằẳẵặâấầẩẫậeéèẻẽẹêếềểễệiíìỉĩịoóòỏõọôốồổỗộơớờởỡợuúùủũụưứừửữựyýỳỷỹỵdđ'
-    #aeiouyd = ['a', 'e', 'i', 'o', 'u', 'y', 'd']
-    legal = ' !"#$%&\'()*+,-./0123456789:;<=>?@[\\]^_`abcdefghijklmnopqrstuvwxyzáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ{|}~'
-    punct = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
-    for index in range(10):
-      #train_data = "%s/train.txt" % data_dir
-      train_data = "%s/corpus-full-%d.txt" % (data_dir, index)
-      with open(train_data, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.strip()
-            line = ''.join(c if c not in punct else '-' for c in line)  # replace all punctuations with '-'
-            line = ''.join(c if c in legal else '?' for c in line)  # replace unknown characters with '?'
-            line_no_tone = unidecode.unidecode(line)
-            if len(line) <= 300:
-              yield {
-                  "inputs": line_no_tone,
-                  "targets": line,
-              }
+    sPath = os.path.join(data_dir, 'source.txt')
+    tPath = os.path.join(data_dir, 'target.txt')
+
+    # Open the files and yield source-target lines.
+    with tf.gfile.GFile(sPath, mode='r') as source_file:
+      with tf.gfile.GFile(tPath, mode='r') as target_file:
+        source, target = source_file.readline(), target_file.readline()
+        while source and target:
+          yield {'inputs': source.strip(), 'targets': target.strip()}
+          source, target = source_file.readline(), target_file.readline()
+
 

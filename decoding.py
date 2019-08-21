@@ -57,7 +57,7 @@ def create_hp_and_estimator(problem_name, data_dir, checkpoint_path):
   return hp, decode_hp, estimator
 
 
-def vivi_interactively(problem_name, data_dir, ckpt_path):
+def chatbot_interactively(problem_name, data_dir, ckpt_path):
   hp, decode_hp, estimator = create_hp_and_estimator(
     problem_name, data_dir, ckpt_path)
   

@@ -1,7 +1,7 @@
 # Create hparams and the model
 model_name=transformer
 hparams_set=transformer_base
-problem_name=translate_vivi
+problem_name=chatbot
 data_dir=./data/$problem_name
 tmp_dir=/tmp/$problem_name
 ckpt_path=./checkpoints/$problem_name
@@ -45,10 +45,10 @@ while [ "$1" != "" ]; do
                                 --decode_hparams=$decode_hparams \
                                 --model=$model_name \
                                 --hparams_set=$hparams_set \
-                                --vivi_data_dir=$data_dir \
-                                --vivi_problem=$problem_name \
-                                --vivi_ckpt=$ckpt_path \
-                                --vivi_interactively \
+                                --chatbot_data_dir=$data_dir \
+                                --chatbot_problem=$problem_name \
+                                --chatbot_ckpt=$ckpt_path \
+                                --chatbot_interactively \
                                 ;;			
         -h | --help )           usage
                                 exit
