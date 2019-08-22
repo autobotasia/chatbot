@@ -18,13 +18,13 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
 
   @property
   def approx_vocab_size(self):
-    return 2**18  # 32768 
+    return 2**16  # 65536 
 
   @property
   def dataset_splits(self):
     return [{
         "split": problem.DatasetSplit.TRAIN,
-        "shards": 10,
+        "shards": 50,
     }, {
         "split": problem.DatasetSplit.EVAL,
         "shards": 1,
