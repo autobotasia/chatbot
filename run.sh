@@ -41,7 +41,7 @@ while [ "$1" != "" ]; do
                                 --output_path=$ckpt_path/avg \
                                 ;;                        
 	    -p | --predict )    echo "Start to run decoder"
-                            python3 ./vivi.py \
+                            python3 ./chatbot.py \
                                 --decode_hparams=$decode_hparams \
                                 --model=$model_name \
                                 --hparams_set=$hparams_set \
