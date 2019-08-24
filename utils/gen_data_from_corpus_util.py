@@ -32,16 +32,26 @@ def gen_data():
       current_dialog_source = ' '.join(line.split('\t')[0].split()[1:])
       current_dialog_target = line.split('\t')[1].strip('\n')
       
+      context = ''
+
       # Whether this is a new dialog.
-      if dialog_id == '1' and current_dialog_source != '':
+      if dialog_id == '1':
+        if context == '':
+          context = current_dialog_source + ' ' + current_dialog_target + ' '
         retval.append({
           'input': current_dialog_source,
           'target': current_dialog_target,
-          'context': current_dialog_source
-        })                  
+          'context': context
+        })
+
+        context = ''
       else:
-        current_dialog_source += current_dialog_source + '\n'
-        current_dialog_target += current_dialog_target + '\n'
+        context += context + current_dialog_source + ' ' + current_dialog_target + ' '
+        retval.append({
+          'input': current_dialog_source,
+          'target': current_dialog_target,
+          'context': context
+        })
 
     else:
       dialog_silenced = True
@@ -55,7 +65,7 @@ def parse(path):
     yield {
         'input': jsdata["question"],
         'target': jsdata["answer"],
-        'context': jsdata["question"]
+        'context': jsdata["question"] + ' ' + jsdata["answer"]
       }
 
 def amazon_qa():
@@ -139,15 +149,18 @@ def dailychat():
 
 
   dialogs = open('./dailychat/dialogues_text.txt', errors='ignore')
-  for dialog in dialogs:      
-      # Utterances are separated by the __eou__ token.
-      utterances = dialog.split('__eou__')[:-1]
+  for dialog in dialogs:    
+    # Utterances are separated by the __eou__ token.
+    utterances = dialog.split('__eou__')[:-1]
+    loop = 0
+    while(loop < len(utterances) - 1):
       tmpdata = {
-        "input"   : ' '.join(utterances),
-        "target"  : ' '.join(utterances[1:]),
+        "input"   : utterances[loop],
+        "target"  : utterances[loop+1],
         "context" : ' '.join(utterances)
-      }
+      }        
       retval.append(tmpdata)
+      loop +=2        
   #print(retval)    
   saveJson(retval)  
 
@@ -269,8 +282,8 @@ def natural_questions():
         
 
   
-natural_questions()
-#gen_data()
-#amazon_qa()
-#squad_qa()
-#dailychat()
+#natural_questions()
+gen_data()
+amazon_qa()
+squad_qa()
+dailychat()

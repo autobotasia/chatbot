@@ -12,6 +12,7 @@ import os
 import json
 import gzip
 import numpy as np
+import re
 
 
 @registry.register_problem
@@ -26,7 +27,7 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
   def dataset_splits(self):
     return [{
         "split": problem.DatasetSplit.TRAIN,
-        "shards": 100,
+        "shards": 200,
     }, {
         "split": problem.DatasetSplit.EVAL,
         "shards": 1,
@@ -36,21 +37,20 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
   def is_generate_per_split(self):
     return True  
 
-  def gen_data(self, tmp_dir, data_dir):
+  def gen_data(self, data_dir, tmp_dir):
     data = []
     with open(os.path.join(data_dir, "data.json"), 'r') as f:
       data = json.load(f)
 
     for example in data:
       yield example
-      
-  def generate_samples(self, data_dir, tmp_dir, dataset_split):
-    #for example in self.gen_data(tmp_dir, data_dir):
-    #  yield {
-    #      "inputs": example["input"],
-    #      "targets": example["target"],
-    #      "context": example["context"]
-    #  }
+
+  def remove_html_tags(self, text):
+    """Remove html tags from a string"""    
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', text)  
+
+  def gen_data_nq(self, data_dir, tmp_dir):
     filenames = [
       'nq-train-00.jsonl.gz',
       'nq-train-17.jsonl.gz',
@@ -105,7 +105,7 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
     ]
 
     for filename in filenames:
-      g = gzip.open(os.path.join(data_dir, './natural_questions/v1.0/train/' + filename), 'r')
+      g = gzip.open(os.path.join('./utils/', './natural_questions/v1.0/train/' + filename), 'r')
       for l in g:
         obj = json.loads(l)      
         document_html = obj['document_html'].encode('utf-8')      
@@ -132,7 +132,7 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
             if a['yes_no_answer'] != 'NONE' and has_short_answer
         ]
 
-        if has_long_answer and has_short_answer:
+        if has_long_answer:
           long_answer_bounds = [
             (la['start_byte'], la['end_byte']) for la in long_answers
           ]
@@ -140,7 +140,7 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
               long_answer_bounds.count(la) for la in long_answer_bounds
           ]
           long_answer = long_answers[np.argmax(long_answer_counts)]
-          context = document_html[long_answer["start_byte"]:long_answer["end_byte"]]
+          answer_text = self.remove_html_tags(document_html[long_answer["start_byte"]:long_answer["end_byte"]])
         
           short_answers_ids = [[
               (s['start_byte'], s['end_byte']) for s in a
@@ -158,13 +158,25 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
           ]
 
           short_answers_texts += yes_no_answers
-          answer_text = short_answers_texts[np.argmax(short_answers_counts)]
+          document_title = self.title = (
+                            obj['document_title']
+                            if obj.has_key('document_title') else '')
+          context = document_title + ' ' + self.remove_html_tags(short_answers_texts[np.argmax(short_answers_counts)])
 
           yield {
             "inputs"   : question_text,
             "targets"  : answer_text,
             "context"  : context
-          } 
+          }    
+
+  def generate_samples(self, data_dir, tmp_dir, dataset_split):
+    for example in self.gen_data_nq(data_dir, tmp_dir):
+      yield {
+          "inputs": example["input"],
+          "targets": example["target"],
+          "context": example["context"]
+      }
+     
 
 
 
