@@ -388,9 +388,9 @@ def create_example_from_jsonl(line):
   return example  
 
 def natural_questions():
-  #input_paths = tf.gfile.Glob("./tiny-dev/nq-train-??.jsonl.gz")
-  input_paths = tf.gfile.Glob("./tiny-dev/nq-dev-sample.jsonl.gz")
-  input_data = []
+  input_paths = tf.gfile.Glob("./natural_questions/v1.0/train/nq-train-??.jsonl.gz")
+  #input_paths = tf.gfile.Glob("./tiny-dev/nq-dev-sample.jsonl.gz")
+  #input_data = []
 
   def _open(path):
     if path.endswith(".gz"):
@@ -407,12 +407,12 @@ def natural_questions():
         if answer == '':
             answer = entry['name']
         retval.append({
-        "input"   : entry['questions'][0]['input_text'],
-        "target"  : answer,
-        "context" : entry['name']
+          "input"   : entry['questions'][0]['input_text'],
+          "target"  : answer,
+          "context" : entry['name']
         })
-        with open(path[:-8] + 'json', 'w') as f:
-            json.dump(retval, f)    
+    with open(path[:-8] + 'json', 'w') as f:
+        json.dump(retval, f)    
       
 
   
