@@ -103,8 +103,8 @@ def amazon_qa():
 
 def squad_qa():
   retval = []
-  with open(output_file_name, 'r') as f:
-    retval = json.load(f)
+  #with open(output_file_name, 'r') as f:
+  #  retval = json.load(f)
 
 
   with open("train-v1.1.json", 'r') as fp:
@@ -283,7 +283,7 @@ def natural_questions():
 
   
 #natural_questions()
-gen_data()
-amazon_qa()
+#gen_data()
+#amazon_qa()
 squad_qa()
-dailychat()
+#dailychat()

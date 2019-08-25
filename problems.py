@@ -27,7 +27,7 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
   def dataset_splits(self):
     return [{
         "split": problem.DatasetSplit.TRAIN,
-        "shards": 30,
+        "shards": 10,
     }, {
         "split": problem.DatasetSplit.EVAL,
         "shards": 1,
