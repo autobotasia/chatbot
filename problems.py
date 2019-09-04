@@ -16,7 +16,7 @@ import re
 
 
 @registry.register_problem
-class Chatbot(text_problems.QuestionAndContext2TextProblem):
+class Chatbot(text_problems.Text2TextProblem):
   """Problem spec for coresystem chatbot."""
 
   @property
@@ -35,17 +35,12 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
 
   @property
   def is_generate_per_split(self):
-    return True  
+    return False  
 
   def gen_data(self, data_dir, tmp_dir):
     data = []
-    with open(os.path.join("./utils", "data.json"), 'r') as f:
+    with open(os.path.join("./utils", "data-nq-filtered.json"), 'r') as f:
       data = json.load(f)
-
-    input_paths = tf.gfile.Glob("./utils/natural_questions/v1.0/train/nq-train-??.json")
-    for fpath in input_paths:
-      with open(fpath, 'r') as input_file:
-        data += json.load(input_file)
 
     for example in data:
       yield example   
@@ -54,8 +49,7 @@ class Chatbot(text_problems.QuestionAndContext2TextProblem):
     for example in self.gen_data(data_dir, tmp_dir):
       yield {
           "inputs": example["input"],
-          "targets": example["target"],
-          "context": example["context"]
+          "targets": example["target"]
       }
      
 
