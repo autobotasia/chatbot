@@ -16,7 +16,7 @@ import re
 
 
 @registry.register_problem
-class Chatbot(text_problems.Text2TextProblem):
+class Chatbot(text_problems.QuestionAndContext2TextProblem):
   """Problem spec for coresystem chatbot."""
 
   @property
@@ -49,7 +49,8 @@ class Chatbot(text_problems.Text2TextProblem):
     for example in self.gen_data(data_dir, tmp_dir):
       yield {
           "inputs": example["input"],
-          "targets": example["target"]
+          "targets": example["target"],
+          "context": example["context"]
       }
      
 
