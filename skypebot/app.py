@@ -3,7 +3,10 @@
 
 import sys
 import traceback
+import uuid
+import ssl
 from datetime import datetime
+from typing import Dict
 
 from aiohttp import web
 from aiohttp.web import Request, Response, json_response
@@ -13,12 +16,10 @@ from botbuilder.core import (
     BotFrameworkAdapter,
 )
 from botbuilder.core.integration import aiohttp_error_middleware
-from botbuilder.schema import Activity, ActivityTypes
+from botbuilder.schema import Activity, ActivityTypes, ConversationReference
 
 from bot import Autobot
 from config import DefaultConfig
-
-import ssl
 
 CONFIG = DefaultConfig()
 
@@ -58,11 +59,20 @@ async def on_error(context: TurnContext, error: Exception):
 
 ADAPTER.on_turn_error = on_error
 
+# Create a shared dictionary.  The Bot will add conversation references when users
+# join the conversation and send messages.
+CONVERSATION_REFERENCES: Dict[str, ConversationReference] = dict()
+
+# If the channel is the Emulator, and authentication is not in use, the AppId will be null.
+# We generate a random AppId for this case only. This is not required for production, since
+# the AppId will have a value.
+APP_ID = SETTINGS.app_id if SETTINGS.app_id else uuid.uuid4()
+
 # Create the Bot
-BOT = Autobot()
+BOT = Autobot(CONVERSATION_REFERENCES)
 
 
-# Listen for incoming requests on /api/messages
+# Listen for incoming requests on /api/messages.
 async def messages(req: Request) -> Response:
     # Main bot message handler.
     if "application/json" in req.headers["Content-Type"]:
@@ -73,24 +83,32 @@ async def messages(req: Request) -> Response:
     activity = Activity().deserialize(body)
     auth_header = req.headers["Authorization"] if "Authorization" in req.headers else ""
 
-    try:
-        response = await ADAPTER.process_activity(activity, auth_header, BOT.on_turn)
-        if response:
-            return json_response(data=response.body, status=response.status)
-        return Response(status=201)
-    except Exception as exception:
-        raise exception
+    response = await ADAPTER.process_activity(activity, auth_header, BOT.on_turn)
+    if response:
+        return json_response(data=response.body, status=response.status)
+    return Response(status=201)
 
-async def test_(req: Request) -> Response:
-    resp = web.Response()
-    resp.body = b"Body changed"
-    resp.content_type = 'text/plain'
-    return resp
+
+# Listen for requests on /api/notify, and send a messages to all conversation members.
+async def notify(req: Request) -> Response:  # pylint: disable=unused-argument
+    await _send_proactive_message()
+    return Response(status=201, text="Proactive messages have been sent")
+
+
+# Send a message to all conversation members.
+# This uses the shared Dictionary that the Bot adds conversation references to.
+async def _send_proactive_message():
+    for conversation_reference in CONVERSATION_REFERENCES.values():
+        return await ADAPTER.continue_conversation(
+            conversation_reference,
+            lambda turn_context: turn_context.send_activity("proactive hello"),
+            APP_ID,
+        )
+
 
 APP = web.Application(middlewares=[aiohttp_error_middleware])
 APP.router.add_post("/api/messages", messages)
-APP.router.add_post("/test", test_)
-APP.router.add_get("/test", test_)
+APP.router.add_get("/api/notify", notify)
 
 if __name__ == "__main__":
     try:
@@ -98,6 +116,6 @@ if __name__ == "__main__":
         keyfile='/etc/letsencrypt/live/kemeno.vn/privkey.pem'
         sslcontext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
         sslcontext.load_cert_chain(certfile, keyfile)
-        web.run_app(APP, host=CONFIG.IP, port=CONFIG.PORT, ssl_context=sslcontext)
+        web.run_app(APP, host=CONFIG.IP, port=CONFIG.PORT), ssl_context=sslcontext)
     except Exception as error:
         raise error
