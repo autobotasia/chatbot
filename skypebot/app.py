@@ -18,6 +18,8 @@ from botbuilder.schema import Activity, ActivityTypes
 from bot import Autobot
 from config import DefaultConfig
 
+import ssl
+
 CONFIG = DefaultConfig()
 
 # Create adapter.
@@ -79,14 +81,23 @@ async def messages(req: Request) -> Response:
     except Exception as exception:
         raise exception
 
+async def test_(req: Request) -> Response:
+    resp = web.Response()
+    resp.body = b"Body changed"
+    resp.content_type = 'text/plain'
+    return resp
 
 APP = web.Application(middlewares=[aiohttp_error_middleware])
 APP.router.add_post("/api/messages", messages)
+APP.router.add_post("/test", test_)
+APP.router.add_get("/test", test_)
 
 if __name__ == "__main__":
     try:
-        web.run_app(APP, host="0.0.0.0", port=CONFIG.PORT, 
-            ssl_context=('/etc/letsencrypt/live/kemeno.vn/cert.pem', 
-                '/etc/letsencrypt/live/kemeno.vn/privkey.pem'))
+        certfile='/etc/letsencrypt/live/kemeno.vn/fullchain.pem'
+        keyfile='/etc/letsencrypt/live/kemeno.vn/privkey.pem'
+        sslcontext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        sslcontext.load_cert_chain(certfile, keyfile)
+        web.run_app(APP, host=CONFIG.IP, port=CONFIG.PORT, ssl_context=sslcontext)
     except Exception as error:
         raise error
