@@ -85,6 +85,8 @@ APP.router.add_post("/api/messages", messages)
 
 if __name__ == "__main__":
     try:
-        web.run_app(APP, host="localhost", port=CONFIG.PORT)
+        web.run_app(APP, host="0.0.0.0", port=CONFIG.PORT, 
+            ssl_context=('/etc/letsencrypt/live/kemeno.vn/cert.pem', 
+                '/etc/letsencrypt/live/kemeno.vn/privkey.pem'))
     except Exception as error:
         raise error
