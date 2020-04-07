@@ -6,7 +6,7 @@ import os
 
 class DefaultConfig:
     """ Bot Configuration """
-    IP = "0.0.0.0"
-    PORT = 443
+    IP = "localhost"
+    PORT = 8080
     APP_ID = "da68e4d7-702c-4587-a16a-619179db0f26"
     APP_PASSWORD = "wt.@r4wdXMT:m6H/yps8hHfiPfVNqzV5"

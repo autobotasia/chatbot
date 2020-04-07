@@ -40,6 +40,7 @@ class Autobot(ActivityHandler):
         :return:
         """
         conversation_reference = TurnContext.get_conversation_reference(activity)
+        print("conversation_reference: ", conversation_reference)
         self.conversation_references[
             conversation_reference.user.id
         ] = conversation_reference

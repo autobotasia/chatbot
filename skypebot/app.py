@@ -98,7 +98,7 @@ async def notify(req: Request) -> Response:  # pylint: disable=unused-argument
 # Send a message to all conversation members.
 # This uses the shared Dictionary that the Bot adds conversation references to.
 async def _send_proactive_message():
-    for conversation_reference in CONVERSATION_REFERENCES.values():
+    for conversation_reference in BOT.conversation_references.values():
         return await ADAPTER.continue_conversation(
             conversation_reference,
             lambda turn_context: turn_context.send_activity("proactive hello"),
@@ -112,10 +112,10 @@ APP.router.add_get("/api/notify", notify)
 
 if __name__ == "__main__":
     try:
-        certfile='/etc/letsencrypt/live/kemeno.vn/fullchain.pem'
-        keyfile='/etc/letsencrypt/live/kemeno.vn/privkey.pem'
-        sslcontext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        sslcontext.load_cert_chain(certfile, keyfile)
-        web.run_app(APP, host=CONFIG.IP, port=CONFIG.PORT), ssl_context=sslcontext)
+        #certfile='/etc/letsencrypt/live/kemeno.vn/fullchain.pem'
+        #keyfile='/etc/letsencrypt/live/kemeno.vn/privkey.pem'
+        #sslcontext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        #sslcontext.load_cert_chain(certfile, keyfile)
+        web.run_app(APP, host=CONFIG.IP, port=CONFIG.PORT) #, ssl_context=sslcontext)
     except Exception as error:
         raise error
